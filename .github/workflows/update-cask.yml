@@ -1,0 +1,38 @@
+name: Update Cask
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'New version (e.g. 0.1.0, no leading v)'
+        required: true
+      sha256:
+        description: 'SHA256 of the .dmg'
+        required: true
+      tag:
+        description: 'Git tag (e.g. v0.1.0)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update claudex.rb
+        run: |
+          sed -i "s/version \".*\"/version \"${{ inputs.version }}\"/" Casks/claudex.rb
+          sed -i "s/sha256 \".*\"/sha256 \"${{ inputs.sha256 }}\"/" Casks/claudex.rb
+          echo "--- Updated cask ---"
+          cat Casks/claudex.rb
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Casks/claudex.rb
+          git commit -m "claudex: bump to ${{ inputs.version }}"
+          git push
